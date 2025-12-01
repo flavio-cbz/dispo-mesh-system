@@ -93,6 +93,8 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
 
 ### Installation Logicielle
 
+#### Option A : Via PlatformIO (Recommandé)
+
 1. **Pré-requis** :
    * [VS Code](https://code.visualstudio.com/)
    * Extension **PlatformIO IDE** pour VS Code.
@@ -100,7 +102,7 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
 2. **Cloner le projet** :
 
     ```bash
-    git clone https://github.com/Flavio-C/dispo-mesh-system.git
+    git clone https://github.com/flavio-cbz/dispo-mesh-system.git
     cd dispo-mesh-system
     ```
 
@@ -120,6 +122,29 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
     ```
 
     Suivez les instructions à l'écran pour flasher le Master puis les Slaves.
+
+#### Option B : Via Arduino IDE (Manuel)
+
+Si vous préférez l'IDE Arduino classique :
+
+1. Installez les bibliothèques listées ci-dessus via le **Gestionnaire de bibliothèques**.
+2. Ouvrez `master_recepteur/src/master_recepteur.ino` pour le Master.
+3. Ouvrez `slave_emetteur/src/slave_emetteur.ino` pour les Slaves.
+4. Sélectionnez votre carte (ESP32 Dev Module) et le port, puis téléversez.
+
+### 📸 Galerie & Schémas
+
+#### Schéma de Câblage Slave
+![Schéma Câblage Slave](path/to/schema_slave.png)
+*(Insérer ici le schéma de câblage du boîtier Slave)*
+
+#### Schéma de Câblage Master
+![Schéma Câblage Master](path/to/schema_master.png)
+*(Insérer ici le schéma de câblage du Master avec le multiplexeur)*
+
+#### Montage Fini
+![Photo du Montage](path/to/photo_montage.jpg)
+*(Insérer ici une photo du système en fonctionnement)*
 
 4. **Profiter !**
     Les boîtiers se connectent entre eux automatiquement. Connectez-vous au WiFi `DispoMesh` (mot de passe: `meshpass2025`) pour accéder au dashboard.
