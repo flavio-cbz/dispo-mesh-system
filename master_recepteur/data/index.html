@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DispoMesh Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-area">
+                <div class="pulse-dot"></div>
+                <h1>DISPOMESH</h1>
+            </div>
+            <p class="subtitle">Système de Disponibilité Distribué</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card available">
+                    <span class="stat-value" id="cd">-</span>
+                    <span class="stat-label">Disponibles</span>
+                </div>
+                <div class="stat-card busy">
+                    <span class="stat-value" id="cb">-</span>
+                    <span class="stat-label">Occupés</span>
+                </div>
+                <div class="stat-card away">
+                    <span class="stat-value" id="ca">-</span>
+                    <span class="stat-label">Absents</span>
+                </div>
+                <div class="stat-card total">
+                    <span class="stat-value" id="ct">-</span>
+                    <span class="stat-label">Connectés</span>
+                </div>
+            </div>
+
+            <!-- Slots Grid -->
+            <div id="slots" class="slots-grid">
+                <!-- Slots injected by JS -->
+            </div>
+
+            <!-- Bottom Section -->
+            <div class="bottom-section">
+                <div class="panel qr-panel">
+                    <h3>Rejoindre le Mesh</h3>
+                    <div class="qr-code">
+                        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10,10 h30 v30 h-30 z M50,10 h30 v30 h-30 z M10,50 h30 v30 h-30 z M50,50 h10 v10 h-10 z M70,50 h10 v10 h-10 z M50,70 h10 v10 h-10 z M70,70 h10 v10 h-10 z" fill="#333"/>
+                        </svg>
+                        <div class="wifi-creds">
+                            <strong>SSID:</strong> DispoMesh<br>
+                            <strong>PASS:</strong> meshpass2025
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel history-panel">
+                    <h3>Historique Récent</h3>
+                    <div id="hist" class="history-list">
+                        <!-- History injected by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="status-bar">
+                <span>DispoMesh v6.0 Enhanced</span>
+                <span class="separator">•</span>
+                <span>Uptime: <span id="up">-</span></span>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
