@@ -82,7 +82,7 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
   * SDA ESP32 (D21) -> SDA TCA
   * SCL ESP32 (D22) -> SCL TCA
   * Écrans sur les canaux TCA : 0, 1, 2, 6, 7.
-* **LEDs NeoPixel** : Pin **D26**.
+* **LEDs NeoPixel** : Pin **D27**.
 
 #### 🔌 Slave (Émetteur)
 * **Écran OLED** : Directement sur I2C.

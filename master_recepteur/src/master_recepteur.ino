@@ -47,7 +47,7 @@
 #define OLED_ADDR     0x3C
 #define TCA_ADDR      0x70
 
-#define PIN_NEOPIXEL  26
+#define PIN_NEOPIXEL  27
 #define PIXELS_PER_SLOT 2
 constexpr uint8_t MAX_SLOTS = 5;
 #define TOTAL_PIXELS  (MAX_SLOTS * PIXELS_PER_SLOT)
