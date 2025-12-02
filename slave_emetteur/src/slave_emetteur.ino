@@ -509,8 +509,8 @@ void taskUI(void *p) {
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable Brownout
   
-  // Watchdog Init (10s)
-  esp_task_wdt_init(10, true);
+  // Watchdog Init (60s)
+  esp_task_wdt_init(60, true);
   esp_task_wdt_add(NULL);
   
   Serial.begin(115200);

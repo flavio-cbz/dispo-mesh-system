@@ -465,6 +465,7 @@ void changed() {
 void taskRun(void *p) {
   Wire.begin(); Wire.setClock(400000); Wire.setTimeOut(1000);
   WiFi.mode(WIFI_AP_STA);
+  WiFi.setSleep(false); // DÉSACTIVER le mode économie d'énergie pour la stabilité WiFi
   
   // Configuration Mesh - MASTER comme ROOT
   mesh.setDebugMsgTypes(ERROR | STARTUP | CONNECTION);
@@ -572,15 +573,13 @@ void setup() {
   Serial.begin(115200);
   bootTime = millis(); // Initialisation du temps de démarrage
   
-  // Watchdog Init (10s)
-  esp_task_wdt_init(10, true);
+  // Watchdog Init (60s) - Augmenté pour stabilité
+  esp_task_wdt_init(60, true);
   esp_task_wdt_add(NULL);
   
   SPIFFS.begin(true); xMutex=xSemaphoreCreateMutex();
   strip.begin(); strip.setBrightness(40); strip.show();
-  
-  playStartupAnimation(); // WOW Effect
-  
+    
   xTaskCreatePinnedToCore(taskRun,"M",16000,NULL,1,NULL,1);
 }
 

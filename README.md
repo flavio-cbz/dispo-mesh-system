@@ -78,6 +78,7 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
 ### Câblage
 
 #### 🔌 Master (Récepteur)
+
 * **Écrans OLED** : Via le Multiplexeur TCA9548A (Adresse 0x70).
   * SDA ESP32 (D21) -> SDA TCA
   * SCL ESP32 (D22) -> SCL TCA
@@ -85,6 +86,7 @@ Pour un kit de démarrage (1 Master + 1 Slave) :
 * **LEDs NeoPixel** : Pin **D27**.
 
 #### 🔌 Slave (Émetteur)
+
 * **Écran OLED** : Directement sur I2C.
   * SDA -> D21
   * SCL -> D22
@@ -135,14 +137,17 @@ Si vous préférez l'IDE Arduino classique :
 ### 📸 Galerie & Schémas
 
 #### Schéma de Câblage Slave
+
 ![Schéma Câblage Slave](path/to/schema_slave.png)
 *(Insérer ici le schéma de câblage du boîtier Slave)*
 
 #### Schéma de Câblage Master
+
 ![Schéma Câblage Master](path/to/schema_master.png)
 *(Insérer ici le schéma de câblage du Master avec le multiplexeur)*
 
 #### Montage Fini
+
 ![Photo du Montage](path/to/photo_montage.jpg)
 *(Insérer ici une photo du système en fonctionnement)*
 
