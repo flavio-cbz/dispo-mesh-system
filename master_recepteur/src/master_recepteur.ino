@@ -48,7 +48,7 @@
 #define TCA_ADDR      0x70
 
 #define PIN_NEOPIXEL  27
-#define PIXELS_PER_SLOT 2
+#define PIXELS_PER_SLOT 1
 constexpr uint8_t MAX_SLOTS = 5;
 #define TOTAL_PIXELS  (MAX_SLOTS * PIXELS_PER_SLOT)
 
@@ -525,7 +525,7 @@ void taskRun(void *p) {
   server.begin();
 
   while(1) {
-    esp_task_wdt_reset(); // Reset Watchdog
+    // esp_task_wdt_reset(); // Watchdog désactivé
     mesh.update();
     server.handleClient();
     checkScreenSaver();   // Check Screen Saver logic
@@ -570,12 +570,13 @@ void taskRun(void *p) {
 }
 
 void setup() {
+  WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable Brownout Detector
   Serial.begin(115200);
   bootTime = millis(); // Initialisation du temps de démarrage
   
-  // Watchdog Init (60s) - Augmenté pour stabilité
-  esp_task_wdt_init(60, true);
-  esp_task_wdt_add(NULL);
+  // Watchdog DÉSACTIVÉ pour stabilité maximale
+  // esp_task_wdt_init(60, true);
+  // esp_task_wdt_add(NULL);
   
   SPIFFS.begin(true); xMutex=xSemaphoreCreateMutex();
   strip.begin(); strip.setBrightness(40); strip.show();

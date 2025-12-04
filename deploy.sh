@@ -119,10 +119,13 @@ master_port=$(select_option "Utilisez les flèches ↑/↓ et Entrée :" "${menu
 
 if [[ "$master_port" != "Skip" && "$master_port" != "Aucun port détecté" ]]; then
     echo "\n${YELLOW}[MASTER] Sélectionné : $master_port${NC}"
-    if run_pio_command "${YELLOW}[MASTER] Upload du système de fichiers (SPIFFS)...${NC}" \
+    
+    echo "\n${BLUE}ℹ️  Le Master nécessite 2 étapes : Système de fichiers (Site Web) + Firmware${NC}"
+    
+    if run_pio_command "${YELLOW}[MASTER] Étape 1/2 : Upload du système de fichiers (SPIFFS)...${NC}" \
         pio run -d "$MASTER_DIR" -e esp32dev -t uploadfs --upload-port "$master_port"; then
 
-        if run_pio_command "\n${YELLOW}[MASTER] Upload du Firmware...${NC}" \
+        if run_pio_command "\n${YELLOW}[MASTER] Étape 2/2 : Upload du Firmware (Code)...${NC}" \
             pio run -d "$MASTER_DIR" -e esp32dev -t upload --upload-port "$master_port"; then
             echo "\n${GREEN}✅ MASTER déployé avec succès !${NC}"
         else

@@ -296,13 +296,34 @@ void setupWebServer() {
       sauvegarderNom(p,n); server.send(200);
     } else server.send(400);
   });
+  
+  // Gestionnaire pour les pages non trouvées (Captive Portal)
+  server.onNotFound([]() {
+    server.send_P(200, "text/html", HTML_PAGE);
+  });
+  
   server.begin();
 }
 
 void sendRegister() {
   StaticJsonDocument<256> doc; doc["type"]="register"; 
-  if(xSemaphoreTake(xMutex,100)){ doc["prenom"]=monPrenom; doc["nom"]=monNom; xSemaphoreGive(xMutex); }
-  doc["etat"]=etatActuel; String msg; serializeJson(doc,msg); mesh.sendBroadcast(msg);
+  
+  String p, n;
+  // Tentative de prise de mutex avec timeout plus long (500ms)
+  if(xSemaphoreTake(xMutex, 500)){ 
+    p = monPrenom; 
+    n = monNom; 
+    xSemaphoreGive(xMutex); 
+  } else {
+    Serial.println("[SLAVE] ERREUR: Mutex occupé, envoi annulé pour éviter 'null'");
+    return;
+  }
+
+  doc["prenom"] = p; 
+  doc["nom"] = n; 
+  doc["etat"] = etatActuel; 
+  
+  String msg; serializeJson(doc,msg); mesh.sendBroadcast(msg);
 }
 
 // 💓 Envoi heartbeat périodique au master
@@ -386,13 +407,17 @@ void receivedCallback(uint32_t from, String &msg) {
     sendRegister();
   }
   else if (t == "update_info") {
-    if(xSemaphoreTake(xMutex,100)){ 
-      monPrenom=doc["prenom"].as<String>(); 
-      monNom=doc["nom"].as<String>(); 
+    String p = doc["prenom"].as<String>();
+    String n = doc["nom"].as<String>();
+    
+    if(xSemaphoreTake(xMutex, 500)){ 
+      monPrenom = p; 
+      monNom = n; 
       xSemaphoreGive(xMutex); 
+      
+      sauvegarderNom(p, n); 
+      sendRegister();
     }
-    sauvegarderNom(monPrenom, monNom); 
-    sendRegister();
   }
 }
 
@@ -418,6 +443,7 @@ void changedConnectionCallback() {
 
 void taskMesh(void *p) {
   WiFi.mode(WIFI_AP_STA);
+  WiFi.setSleep(false); // STABILITÉ: Désactiver économie énergie WiFi
   
   // Configuration Mesh - SLAVE cherche le ROOT
   mesh.setDebugMsgTypes(ERROR | STARTUP | CONNECTION);
@@ -435,7 +461,7 @@ void taskMesh(void *p) {
   meshInitialized = true;
   
   while (true) {
-    esp_task_wdt_reset(); // Reset Watchdog
+    // esp_task_wdt_reset(); // Watchdog désactivé
     mesh.update();
     static unsigned long lbp = 0; static bool lbs = HIGH;
     bool s = digitalRead(BTN_PIN);
@@ -448,11 +474,14 @@ void taskMesh(void *p) {
     }
     lbs = s;
     updateLEDs();
+    
+    bool triggerRegister = false;
     if (xSemaphoreTake(xMutex, 5)) {
-      if (configSauvegardee) { configSauvegardee = false; sendRegister(); }
-      if (needsRegister) { needsRegister = false; sendRegister(); } // Re-registration différée
+      if (configSauvegardee) { configSauvegardee = false; triggerRegister = true; }
+      if (needsRegister) { needsRegister = false; triggerRegister = true; } // Re-registration différée
       xSemaphoreGive(xMutex);
     }
+    if (triggerRegister) sendRegister();
     
     // Re-registration périodique si non assigné
     static unsigned long lastRegisterAttempt = 0;
@@ -509,9 +538,9 @@ void taskUI(void *p) {
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable Brownout
   
-  // Watchdog Init (60s)
-  esp_task_wdt_init(60, true);
-  esp_task_wdt_add(NULL);
+  // Watchdog DÉSACTIVÉ
+  // esp_task_wdt_init(60, true);
+  // esp_task_wdt_add(NULL);
   
   Serial.begin(115200);
   initSSID(); SPIFFS.begin(true); xMutex = xSemaphoreCreateMutex();
