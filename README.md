@@ -41,6 +41,8 @@ Chaque collaborateur dispose d'un petit boîtier autonome.
 * **Action** : Un simple bouton pour changer de statut.
 * **Feedback** : Une LED (Verte/Rouge/Orange) et un petit écran confirment le statut actuel.
 * **Intelligence** : Si vous oubliez de vous mettre en "Absent", le boîtier passe automatiquement en **Mode Éco** après 5 minutes d'inactivité.
+* **Configuration facile** : Au premier démarrage, le boîtier crée un WiFi de config. Après configuration, il se connecte automatiquement au réseau.
+* **Reset sans ordinateur** : Maintenir le bouton 5 secondes au démarrage pour réinitialiser la configuration.
 
 ### 2. Le Boîtier "Master" (À l'entrée ou au mur)
 

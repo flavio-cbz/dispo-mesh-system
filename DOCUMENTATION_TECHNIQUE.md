@@ -66,14 +66,46 @@ Pour éviter le marquage des écrans OLED (burn-in) et réduire la consommation 
 
 Le Slave est conçu pour être autonome et économe en énergie.
 
-### 3.1 Gestion des États
+### 3.1 Initialisation & Configuration
+
+Le Slave possède deux modes de démarrage selon son état de configuration :
+
+#### Mode Configuration (Premier démarrage ou après reset)
+
+Si le Slave **n'est pas configuré** :
+
+* 🔵 LED bleue clignotante
+* Écran affiche "MODE CONFIG" avec le SSID WiFi
+* Un point d'accès WiFi visible est créé (`Config_Poste_XXXX`)
+* **Le mesh NE démarre PAS** - pas de connexion au Master
+* Après configuration via l'interface web → redémarrage automatique
+
+#### Mode Normal
+
+Si le Slave **est déjà configuré** :
+
+* Démarrage normal avec connexion au mesh
+* Panneau de configuration WiFi masqué
+
+#### Reset de la Configuration
+
+Pour **réinitialiser** un Slave (équivalent à un re-upload du code) :
+
+1. Maintenir le **bouton enfoncé pendant 5 secondes au démarrage**
+2. 🟠 LED orange clignotante + compte à rebours sur l'écran
+3. Après 5 secondes : 🟣 LED magenta + "CONFIG RESET!"
+4. La configuration est effacée et le Slave passe en mode configuration
+
+> **Note** : Cette fonctionnalité permet de reconfigurer un Slave sur le terrain sans ordinateur.
+
+### 3.2 Gestion des États
 
 L'utilisateur change son statut via un bouton poussoir unique.
 
 * **États** : Disponible (Vert) -> Occupé (Rouge) -> Absent (Orange).
 * **Feedback** : Une LED NeoPixel et un écran OLED local confirment l'état.
 
-### 3.2 Mode Éco (Deep Power Saving)
+### 3.3 Mode Éco (Deep Power Saving)
 
 Si l'utilisateur reste en statut "ABSENT" pendant plus de 5 minutes, le Slave entre en mode économie d'énergie agressif :
 
@@ -81,7 +113,7 @@ Si l'utilisateur reste en statut "ABSENT" pendant plus de 5 minutes, le Slave en
 2. **WiFi Power Save** : Activation du mode `WIFI_PS_MIN_MODEM`.
 3. **Dimming** : La luminosité des LEDs est réduite au minimum.
 
-### 3.3 Communication
+### 3.4 Communication
 
 * **Heartbeat** : Envoie un message `heartbeat` toutes les 30 secondes pour dire au Master "Je suis vivant".
 * **Broadcast** : Envoie un message `status` immédiatement lors d'un appui bouton.

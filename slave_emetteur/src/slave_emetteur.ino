@@ -9,20 +9,20 @@
  * ═══════════════════════════════════════════════════════════════════════
  */
 
-#include <painlessMesh.h>
+#include <Adafruit_NeoPixel.h>
+#include <Adafruit_SSD1306.h>
 #include <ArduinoJson.h>
-#include <WiFi.h>
-#include <WebServer.h>
 #include <DNSServer.h>
 #include <SPIFFS.h>
-#include <Adafruit_NeoPixel.h>
-#include <Wire.h>
-#include <Adafruit_SSD1306.h>
 #include <U8g2_for_Adafruit_GFX.h>
+#include <WebServer.h>
+#include <WiFi.h>
+#include <Wire.h>
+#include <painlessMesh.h>
 
 // MODULES CRITIQUES (Anti-Brownout)
-#include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
+#include "soc/soc.h"
 
 // MODULES ÉCONOMIE D'ÉNERGIE
 #include "esp_wifi.h"
@@ -30,37 +30,40 @@
 #include <esp_task_wdt.h>
 
 // 🔒 CONFIGURATION SÉCURITÉ
-#define HIDE_NETWORKS   1  // 1 = Masqué, 0 = Visible
+#define HIDE_NETWORKS 1 // 1 = Masqué, 0 = Visible
 
 // ⚡ CONFIGURATION ÉCONOMIE D'ÉNERGIE
-#define ECO_MODE_DELAY_MS     300000  // 5 minutes en ABSENT avant mode éco
-#define HEARTBEAT_INTERVAL_MS 30000   // Heartbeat toutes les 30 secondes
+#define ECO_MODE_DELAY_MS 300000    // 5 minutes en ABSENT avant mode éco
+#define HEARTBEAT_INTERVAL_MS 30000 // Heartbeat toutes les 30 secondes
 #define LED_BRIGHTNESS_NORMAL 40
-#define LED_BRIGHTNESS_ECO    8
-#define CPU_FREQ_NORMAL       240     // MHz
-#define CPU_FREQ_ECO          80      // MHz
+#define LED_BRIGHTNESS_ECO 8
+#define CPU_FREQ_NORMAL 240 // MHz
+#define CPU_FREQ_ECO 80     // MHz
 
 // CONFIGURATION MATÉRIEL
-#define BTN_PIN       32
-#define PIN_NEOPIXEL  27
-#define NUM_PIXELS    1
+#define BTN_PIN 32
+#define PIN_NEOPIXEL 27
+#define NUM_PIXELS 1
 
 #define SCREEN_WIDTH 128
 #define SCREEN_HEIGHT 32
-#define OLED_ADDR     0x3C
+#define OLED_ADDR 0x3C
 
 Adafruit_NeoPixel pixel(NUM_PIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 U8G2_FOR_ADAFRUIT_GFX u8g2;
 
-const uint32_t COLOR_DISPO  = pixel.Color(0, 255, 0);
-const uint32_t COLOR_BUSY   = pixel.Color(255, 0, 0);
-const uint32_t COLOR_AWAY   = pixel.Color(255, 140, 0);
+const uint32_t COLOR_DISPO = pixel.Color(0, 255, 0);
+const uint32_t COLOR_BUSY = pixel.Color(255, 0, 0);
+const uint32_t COLOR_AWAY = pixel.Color(255, 140, 0);
 
 // VARIABLES GLOBALES
-#define MESH_PREFIX     "DispoMesh"
-#define MESH_PASSWORD   "meshpass2025"
-#define MESH_PORT       5555
+#define MESH_PREFIX "DispoMesh"
+#define MESH_PASSWORD "meshpass2025"
+#define MESH_PORT 5555
+
+// 🔧 CONFIGURATION RESET
+#define RESET_HOLD_TIME_MS 5000 // 5 secondes pour reset config
 
 SemaphoreHandle_t xMutex;
 char apSSID[32];
@@ -71,11 +74,13 @@ int slotId = -1;
 volatile bool configSauvegardee = false;
 bool meshInitialized = false;
 volatile bool needsRegister = false; // Flag pour re-registration différé
+bool isConfigured = false;           // Flag indiquant si le poste est configuré
+bool configModeActive = false; // Flag indiquant si on est en mode configuration
 
 // ⚡ Variables mode économie d'énergie
-unsigned long lastStateChange = 0;    // Timestamp du dernier changement d'état
-unsigned long lastHeartbeat = 0;      // Timestamp du dernier heartbeat
-bool ecoModeActive = false;           // Mode économie activé
+unsigned long lastStateChange = 0; // Timestamp du dernier changement d'état
+unsigned long lastHeartbeat = 0;   // Timestamp du dernier heartbeat
+bool ecoModeActive = false;        // Mode économie activé
 uint8_t currentBrightness = LED_BRIGHTNESS_NORMAL;
 
 Scheduler userScheduler;
@@ -86,39 +91,49 @@ DNSServer dnsServer;
 // ═══════════════════════════════════════════════════════════════════════
 // UI OLED
 // ═══════════════════════════════════════════════════════════════════════
-const unsigned char icon_wifi[] PROGMEM = { 0x3C, 0x42, 0x81, 0x3C, 0x42, 0x18, 0x00, 0x18 };
+const unsigned char icon_wifi[] PROGMEM = {0x3C, 0x42, 0x81, 0x3C,
+                                           0x42, 0x18, 0x00, 0x18};
 
 void updateLocalDisplay() {
   display.clearDisplay();
   u8g2.setForegroundColor(SSD1306_WHITE);
-  
+
   // Header
   display.drawLine(0, 8, SCREEN_WIDTH, 8, SSD1306_WHITE);
-  if (slotId != -1) display.drawBitmap(2, 0, icon_wifi, 8, 8, SSD1306_WHITE);
-  
+  if (slotId != -1)
+    display.drawBitmap(2, 0, icon_wifi, 8, 8, SSD1306_WHITE);
+
   u8g2.setFont(u8g2_font_4x6_tr);
   String idTxt = "ID:" + String(mesh.getNodeId() % 100);
-  u8g2.drawUTF8(SCREEN_WIDTH - u8g2.getUTF8Width(idTxt.c_str()) - 2, 6, idTxt.c_str());
+  u8g2.drawUTF8(SCREEN_WIDTH - u8g2.getUTF8Width(idTxt.c_str()) - 2, 6,
+                idTxt.c_str());
 
   // Nom
   u8g2.setFont(u8g2_font_helvB08_tf);
   String fullName = monPrenom + " " + monNom;
   int xName = (SCREEN_WIDTH - u8g2.getUTF8Width(fullName.c_str())) / 2;
-  if (xName < 0) xName = 0;
+  if (xName < 0)
+    xName = 0;
   u8g2.drawUTF8(xName, 20, fullName.c_str());
 
   // Badge Statut
   String statusTxt;
-  switch(etatActuel) {
-    case 0: statusTxt = "DISPONIBLE"; break;
-    case 1: statusTxt = "OCCUPE"; break;
-    default: statusTxt = "ABSENT"; break;
+  switch (etatActuel) {
+  case 0:
+    statusTxt = "DISPONIBLE";
+    break;
+  case 1:
+    statusTxt = "OCCUPE";
+    break;
+  default:
+    statusTxt = "ABSENT";
+    break;
   }
-  
+
   u8g2.setFont(u8g2_font_5x7_tf);
   int wStatus = u8g2.getUTF8Width(statusTxt.c_str()) + 8;
   int xStatus = (SCREEN_WIDTH - wStatus) / 2;
-  
+
   display.fillRoundRect(xStatus, 23, wStatus, 9, 4, SSD1306_WHITE);
   u8g2.setForegroundColor(SSD1306_BLACK);
   u8g2.setBackgroundColor(SSD1306_WHITE);
@@ -140,9 +155,15 @@ void updateLEDs() {
     }
   } else {
     switch (etatActuel) {
-      case 0: pixel.setPixelColor(0, COLOR_DISPO); break;
-      case 1: pixel.setPixelColor(0, COLOR_BUSY); break;
-      default: pixel.setPixelColor(0, COLOR_AWAY); break;
+    case 0:
+      pixel.setPixelColor(0, COLOR_DISPO);
+      break;
+    case 1:
+      pixel.setPixelColor(0, COLOR_BUSY);
+      break;
+    default:
+      pixel.setPixelColor(0, COLOR_AWAY);
+      break;
     }
   }
   pixel.show();
@@ -152,31 +173,56 @@ void updateLEDs() {
 // SYSTÈME
 // ═══════════════════════════════════════════════════════════════════════
 void initSSID() {
-  uint8_t mac[6]; WiFi.macAddress(mac);
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
   snprintf(apSSID, sizeof(apSSID), "Config_Poste_%02X%02X", mac[4], mac[5]);
 }
 
 void sauvegarderNom(String p, String n) {
   File f = SPIFFS.open("/config.json", "w");
   if (f) {
-    StaticJsonDocument<256> doc; doc["p"] = p; doc["n"] = n;
-    serializeJson(doc, f); f.close();
+    StaticJsonDocument<256> doc;
+    doc["p"] = p;
+    doc["n"] = n;
+    serializeJson(doc, f);
+    f.close();
   }
   updateLocalDisplay();
 }
 
-void chargerNom() {
+bool chargerNom() {
   if (SPIFFS.exists("/config.json")) {
     File f = SPIFFS.open("/config.json", "r");
     if (f) {
       StaticJsonDocument<256> doc;
       if (deserializeJson(doc, f) == DeserializationError::Ok) {
-        monPrenom = doc["p"] | String(apSSID);
-        monNom = doc["n"] | "";
+        String p = doc["p"] | "";
+        String n = doc["n"] | "";
+        // Vérifier que le prénom n'est pas vide ou égal à l'SSID par défaut
+        if (p.length() > 0 && !p.startsWith("Config_Poste_")) {
+          monPrenom = p;
+          monNom = n;
+          f.close();
+          return true; // Configuration valide trouvée
+        }
       }
       f.close();
     }
-  } else { monPrenom = String(apSSID); }
+  }
+  monPrenom = String(apSSID);
+  monNom = "";
+  return false; // Pas de configuration valide
+}
+
+// Fonction pour effacer la configuration
+void effacerConfig() {
+  if (SPIFFS.exists("/config.json")) {
+    SPIFFS.remove("/config.json");
+    Serial.println("[CONFIG] Configuration effacée");
+  }
+  monPrenom = String(apSSID);
+  monNom = "";
+  isConfigured = false;
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -279,63 +325,78 @@ const char HTML_PAGE[] PROGMEM = R"rawliteral(
 )rawliteral";
 
 void setupWebServer() {
-  server.on("/", [](){ server.send_P(200, "text/html", HTML_PAGE); });
-  server.on("/api/get", [](){ 
-    StaticJsonDocument<256> d; 
-    d["prenom"]=monPrenom; 
-    d["nom"]=monNom; 
-    d["ssid"]=String(apSSID);
-    d["meshConnected"]=!mesh.getNodeList().empty();
-    d["slotId"]=slotId;
-    String s; serializeJson(d,s); server.send(200,"application/json",s); 
+  server.on("/", []() { server.send_P(200, "text/html", HTML_PAGE); });
+  server.on("/api/get", []() {
+    StaticJsonDocument<256> d;
+    d["prenom"] = monPrenom;
+    d["nom"] = monNom;
+    d["ssid"] = String(apSSID);
+    d["meshConnected"] = !mesh.getNodeList().empty();
+    d["slotId"] = slotId;
+    String s;
+    serializeJson(d, s);
+    server.send(200, "application/json", s);
   });
-  server.on("/api/save", [](){
-    String p=server.arg("prenom"); String n=server.arg("nom"); p.trim(); n.trim();
-    if(p.length()>0) { 
-      if(xSemaphoreTake(xMutex,100)){ monPrenom=p; monNom=n; configSauvegardee=true; xSemaphoreGive(xMutex); }
-      sauvegarderNom(p,n); server.send(200);
-    } else server.send(400);
+  server.on("/api/save", []() {
+    String p = server.arg("prenom");
+    String n = server.arg("nom");
+    p.trim();
+    n.trim();
+    if (p.length() > 0) {
+      if (xSemaphoreTake(xMutex, 100)) {
+        monPrenom = p;
+        monNom = n;
+        configSauvegardee = true;
+        xSemaphoreGive(xMutex);
+      }
+      sauvegarderNom(p, n);
+      server.send(200);
+    } else
+      server.send(400);
   });
-  
+
   // Gestionnaire pour les pages non trouvées (Captive Portal)
-  server.onNotFound([]() {
-    server.send_P(200, "text/html", HTML_PAGE);
-  });
-  
+  server.onNotFound([]() { server.send_P(200, "text/html", HTML_PAGE); });
+
   server.begin();
 }
 
 void sendRegister() {
-  StaticJsonDocument<256> doc; doc["type"]="register"; 
-  
+  StaticJsonDocument<256> doc;
+  doc["type"] = "register";
+
   String p, n;
   // Tentative de prise de mutex avec timeout plus long (500ms)
-  if(xSemaphoreTake(xMutex, 500)){ 
-    p = monPrenom; 
-    n = monNom; 
-    xSemaphoreGive(xMutex); 
+  if (xSemaphoreTake(xMutex, 500)) {
+    p = monPrenom;
+    n = monNom;
+    xSemaphoreGive(xMutex);
   } else {
-    Serial.println("[SLAVE] ERREUR: Mutex occupé, envoi annulé pour éviter 'null'");
+    Serial.println(
+        "[SLAVE] ERREUR: Mutex occupé, envoi annulé pour éviter 'null'");
     return;
   }
 
-  doc["prenom"] = p; 
-  doc["nom"] = n; 
-  doc["etat"] = etatActuel; 
-  
-  String msg; serializeJson(doc,msg); mesh.sendBroadcast(msg);
+  doc["prenom"] = p;
+  doc["nom"] = n;
+  doc["etat"] = etatActuel;
+
+  String msg;
+  serializeJson(doc, msg);
+  mesh.sendBroadcast(msg);
 }
 
 // 💓 Envoi heartbeat périodique au master
 void sendHeartbeat() {
-  if (slotId == -1) return; // Pas de heartbeat si non assigné
-  
+  if (slotId == -1)
+    return; // Pas de heartbeat si non assigné
+
   StaticJsonDocument<128> doc;
   doc["type"] = "heartbeat";
   doc["slotId"] = slotId;
   doc["etat"] = etatActuel;
   doc["eco"] = ecoModeActive;
-  
+
   String msg;
   serializeJson(doc, msg);
   mesh.sendBroadcast(msg);
@@ -344,39 +405,39 @@ void sendHeartbeat() {
 
 // ⚡ Gestion du mode économie d'énergie
 void checkEcoMode() {
-  bool shouldBeEco = (etatActuel == 2) && 
+  bool shouldBeEco = (etatActuel == 2) &&
                      (millis() - lastStateChange > ECO_MODE_DELAY_MS) &&
                      (slotId != -1); // Seulement si connecté
-  
+
   if (shouldBeEco && !ecoModeActive) {
     // Activation mode éco
     ecoModeActive = true;
     Serial.println("[ECO] Mode économie ACTIVÉ");
-    
+
     // Réduire luminosité LED
     currentBrightness = LED_BRIGHTNESS_ECO;
     pixel.setBrightness(currentBrightness);
-    
+
     // Réduire fréquence CPU
     setCpuFrequencyMhz(CPU_FREQ_ECO);
     Serial.printf("[ECO] CPU: %d MHz\n", getCpuFrequencyMhz());
-    
+
     // Activer WiFi power save
     esp_wifi_set_ps(WIFI_PS_MIN_MODEM);
-    
+
   } else if (!shouldBeEco && ecoModeActive) {
     // Désactivation mode éco
     ecoModeActive = false;
     Serial.println("[ECO] Mode économie DÉSACTIVÉ");
-    
+
     // Restaurer luminosité LED
     currentBrightness = LED_BRIGHTNESS_NORMAL;
     pixel.setBrightness(currentBrightness);
-    
+
     // Restaurer fréquence CPU
     setCpuFrequencyMhz(CPU_FREQ_NORMAL);
     Serial.printf("[ECO] CPU: %d MHz\n", getCpuFrequencyMhz());
-    
+
     // Désactiver WiFi power save pour réactivité
     esp_wifi_set_ps(WIFI_PS_NONE);
   }
@@ -387,35 +448,33 @@ void checkEcoMode() {
 // ═══════════════════════════════════════════════════════════════════════
 void receivedCallback(uint32_t from, String &msg) {
   Serial.printf("[SLAVE] Message reçu de %u: %s\n", from, msg.c_str());
-  
-  StaticJsonDocument<512> doc; 
-  if(deserializeJson(doc, msg) != DeserializationError::Ok) {
+
+  StaticJsonDocument<512> doc;
+  if (deserializeJson(doc, msg) != DeserializationError::Ok) {
     Serial.println("[SLAVE] Erreur parsing JSON");
     return;
   }
-  
+
   String t = doc["type"];
-  
-  if (t == "assigned") { 
-    slotId = doc["slotId"]; 
+
+  if (t == "assigned") {
+    slotId = doc["slotId"];
     Serial.printf("[SLAVE] Slot assigné: %d\n", slotId);
-    updateLEDs(); 
-    updateLocalDisplay(); 
-  }
-  else if (t == "identify") {
+    updateLEDs();
+    updateLocalDisplay();
+  } else if (t == "identify") {
     Serial.println("[SLAVE] Demande d'identification reçue");
     sendRegister();
-  }
-  else if (t == "update_info") {
+  } else if (t == "update_info") {
     String p = doc["prenom"].as<String>();
     String n = doc["nom"].as<String>();
-    
-    if(xSemaphoreTake(xMutex, 500)){ 
-      monPrenom = p; 
-      monNom = n; 
-      xSemaphoreGive(xMutex); 
-      
-      sauvegarderNom(p, n); 
+
+    if (xSemaphoreTake(xMutex, 500)) {
+      monPrenom = p;
+      monNom = n;
+      xSemaphoreGive(xMutex);
+
+      sauvegarderNom(p, n);
       sendRegister();
     }
   }
@@ -424,16 +483,16 @@ void receivedCallback(uint32_t from, String &msg) {
 void changedConnectionCallback() {
   auto nodes = mesh.getNodeList();
   Serial.printf("[SLAVE] Connexions changées! Nodes: %d\n", nodes.size());
-  
+
   // Vérification plus robuste: utiliser isConnected() si disponible
   // ou vérifier si le mesh est toujours actif
   bool isConnected = mesh.isConnected(mesh.getNodeId()) || !nodes.empty();
-  
-  if (!isConnected && slotId != -1) { 
+
+  if (!isConnected && slotId != -1) {
     Serial.println("[SLAVE] Déconnecté du mesh - Reset slotId");
-    slotId = -1; 
-    updateLEDs(); 
-    updateLocalDisplay(); 
+    slotId = -1;
+    updateLEDs();
+    updateLocalDisplay();
   } else if (isConnected || !nodes.empty()) {
     Serial.println("[SLAVE] Connecté au mesh - Envoi register différé");
     // Différer l'envoi pour éviter les problèmes dans le callback
@@ -444,128 +503,338 @@ void changedConnectionCallback() {
 void taskMesh(void *p) {
   WiFi.mode(WIFI_AP_STA);
   WiFi.setSleep(false); // STABILITÉ: Désactiver économie énergie WiFi
-  
+
   // Configuration Mesh - SLAVE cherche le ROOT
   mesh.setDebugMsgTypes(ERROR | STARTUP | CONNECTION);
-  mesh.init(MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA, 6); // Canal fixe 6
-  mesh.setContainsRoot(true);   // IMPORTANT: Indique qu'il doit chercher un ROOT
-  
+  mesh.init(MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT, WIFI_AP_STA,
+            6);               // Canal fixe 6
+  mesh.setContainsRoot(true); // IMPORTANT: Indique qu'il doit chercher un ROOT
+
   mesh.onReceive(&receivedCallback);
   mesh.onChangedConnections(&changedConnectionCallback);
-  
+
   Serial.printf("[SLAVE] NodeID: %u\n", mesh.getNodeId());
   Serial.println("[SLAVE] Mesh initialisé - Recherche du ROOT...");
-  
-  // Note: Ne PAS appeler WiFi.softAP(MESH_PREFIX...) ici - cela interfère avec painlessMesh
-  
+
+  // Note: Ne PAS appeler WiFi.softAP(MESH_PREFIX...) ici - cela interfère avec
+  // painlessMesh
+
   meshInitialized = true;
-  
+
   while (true) {
     // esp_task_wdt_reset(); // Watchdog désactivé
     mesh.update();
-    static unsigned long lbp = 0; static bool lbs = HIGH;
+    static unsigned long lbp = 0;
+    static bool lbs = HIGH;
     bool s = digitalRead(BTN_PIN);
     if (s == LOW && lbs == HIGH && (millis() - lbp > 200)) {
-      etatActuel = (etatActuel + 1) % 3; 
+      etatActuel = (etatActuel + 1) % 3;
       lbp = millis();
       lastStateChange = millis(); // Tracker le changement d'état pour mode éco
-      updateLEDs(); updateLocalDisplay();
-      StaticJsonDocument<64> d; d["type"]="status"; d["etat"]=etatActuel; String m; serializeJson(d,m); mesh.sendBroadcast(m);
+      updateLEDs();
+      updateLocalDisplay();
+      StaticJsonDocument<64> d;
+      d["type"] = "status";
+      d["etat"] = etatActuel;
+      String m;
+      serializeJson(d, m);
+      mesh.sendBroadcast(m);
     }
     lbs = s;
     updateLEDs();
-    
+
     bool triggerRegister = false;
     if (xSemaphoreTake(xMutex, 5)) {
-      if (configSauvegardee) { configSauvegardee = false; triggerRegister = true; }
-      if (needsRegister) { needsRegister = false; triggerRegister = true; } // Re-registration différée
+      if (configSauvegardee) {
+        configSauvegardee = false;
+        triggerRegister = true;
+      }
+      if (needsRegister) {
+        needsRegister = false;
+        triggerRegister = true;
+      } // Re-registration différée
       xSemaphoreGive(xMutex);
     }
-    if (triggerRegister) sendRegister();
-    
+    if (triggerRegister)
+      sendRegister();
+
     // Re-registration périodique si non assigné
     static unsigned long lastRegisterAttempt = 0;
-    if (slotId == -1 && !mesh.getNodeList().empty() && millis() - lastRegisterAttempt > 5000) {
+    if (slotId == -1 && !mesh.getNodeList().empty() &&
+        millis() - lastRegisterAttempt > 5000) {
       sendRegister();
       lastRegisterAttempt = millis();
     }
-    
+
     // 💓 Heartbeat périodique
     if (millis() - lastHeartbeat > HEARTBEAT_INTERVAL_MS) {
       sendHeartbeat();
       lastHeartbeat = millis();
     }
-    
+
     // ⚡ Vérification mode économie
     checkEcoMode();
-    
+
     vTaskDelay(pdMS_TO_TICKS(5));
   }
 }
 
 void taskUI(void *p) {
-  while(!meshInitialized) delay(100);
-  
+  while (!meshInitialized)
+    delay(100);
+
   // Attendre que le mesh soit stabilisé (2 secondes)
   delay(2000);
-  
-  // Démarrage AP Config sur canal 6 (même que mesh) - NE PAS changer dynamiquement
-  // Note: L'AP de config utilise un SSID différent donc pas d'interférence
+
+  // Démarrage AP Config sur canal 6 (même que mesh) - NE PAS changer
+  // dynamiquement Note: L'AP de config utilise un SSID différent donc pas
+  // d'interférence
   WiFi.softAP(apSSID, "config2025", 6, HIDE_NETWORKS);
   Serial.printf("[SLAVE] AP Config démarré: %s\n", apSSID);
   Serial.printf("[SLAVE] IP: %s\n", WiFi.softAPIP().toString().c_str());
+
+  dnsServer.start(53, "*", WiFi.softAPIP());
+  setupWebServer();
+
+  unsigned long lastDebug = 0;
+
+  while (1) {
+    dnsServer.processNextRequest();
+    server.handleClient();
+
+    // Debug périodique
+    if (millis() - lastDebug > 10000) {
+      Serial.printf("[SLAVE] Connecté: %s, SlotID: %d, Nodes: %d\n",
+                    slotId != -1 ? "OUI" : "NON", slotId,
+                    mesh.getNodeList().size());
+      lastDebug = millis();
+    }
+
+    delay(10);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// TÂCHE MODE CONFIGURATION (sans mesh)
+// ═══════════════════════════════════════════════════════════════════════
+void taskConfigOnly(void *p) {
+  Serial.println("[CONFIG] Démarrage mode configuration seul");
   
+  // Démarrage AP Config uniquement (pas de mesh)
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(apSSID, "config2025", 6, 0); // Visible pour faciliter la config
+  Serial.printf("[CONFIG] AP démarré: %s\n", apSSID);
+  Serial.printf("[CONFIG] IP: %s\n", WiFi.softAPIP().toString().c_str());
+  
+  // Afficher écran mode configuration
+  display.clearDisplay();
+  u8g2.setForegroundColor(SSD1306_WHITE);
+  u8g2.setFont(u8g2_font_helvB08_tf);
+  u8g2.drawUTF8(5, 12, "MODE CONFIG");
+  u8g2.setFont(u8g2_font_5x7_tf);
+  u8g2.drawUTF8(5, 24, "WiFi:");
+  u8g2.drawUTF8(35, 24, apSSID);
+  display.display();
+  
+  // LED bleu clair clignotant pour indiquer mode config
   dnsServer.start(53, "*", WiFi.softAPIP());
   setupWebServer();
   
-  unsigned long lastDebug = 0;
+  unsigned long lastBlink = 0;
+  bool ledOn = false;
   
-  while(1) { 
-    dnsServer.processNextRequest(); 
-    server.handleClient(); 
+  while (1) {
+    dnsServer.processNextRequest();
+    server.handleClient();
     
-    // Debug périodique
-    if(millis() - lastDebug > 10000) {
-      Serial.printf("[SLAVE] Connecté: %s, SlotID: %d, Nodes: %d\n", 
-        slotId != -1 ? "OUI" : "NON", slotId, mesh.getNodeList().size());
-      lastDebug = millis();
+    // Clignotement LED bleu pour mode config
+    if (millis() - lastBlink > 500) {
+      ledOn = !ledOn;
+      if (ledOn) {
+        pixel.setPixelColor(0, pixel.Color(0, 100, 255)); // Bleu
+      } else {
+        pixel.setPixelColor(0, 0);
+      }
+      pixel.show();
+      lastBlink = millis();
     }
     
-    delay(10); 
+    // Vérifier si une configuration a été sauvegardée
+    if (xSemaphoreTake(xMutex, 5)) {
+      if (configSauvegardee) {
+        configSauvegardee = false;
+        xSemaphoreGive(xMutex);
+        
+        Serial.println("[CONFIG] Configuration reçue - Redémarrage...");
+        
+        // Afficher message de redémarrage
+        display.clearDisplay();
+        u8g2.setFont(u8g2_font_helvB08_tf);
+        u8g2.drawUTF8(15, 12, "CONFIG OK!");
+        u8g2.setFont(u8g2_font_5x7_tf);
+        u8g2.drawUTF8(10, 26, "Redemarrage...");
+        display.display();
+        
+        // LED vert fixe
+        pixel.setPixelColor(0, COLOR_DISPO);
+        pixel.show();
+        
+        delay(2000);
+        ESP.restart(); // Redémarrer pour appliquer la config
+      }
+      xSemaphoreGive(xMutex);
+    }
+    
+    delay(10);
   }
 }
 
 void setup() {
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // Disable Brownout
-  
+
   // Watchdog DÉSACTIVÉ
   // esp_task_wdt_init(60, true);
   // esp_task_wdt_add(NULL);
-  
+
   Serial.begin(115200);
-  initSSID(); SPIFFS.begin(true); xMutex = xSemaphoreCreateMutex();
-  chargerNom();
-  
-  // Initialiser le tracker de changement d'état
-  lastStateChange = millis();
-  
+  Serial.println("\n[SLAVE] ═══════════════════════════════════════════");
+  Serial.println("[SLAVE] DispoMesh - Slave Émetteur DÉMARRAGE");
+  Serial.println("[SLAVE] ═══════════════════════════════════════════");
+
+  initSSID();
+  SPIFFS.begin(true);
+  xMutex = xSemaphoreCreateMutex();
+
+  // Initialiser le pin du bouton AVANT de vérifier le reset
   pinMode(BTN_PIN, INPUT_PULLUP);
-  pixel.begin(); pixel.setBrightness(LED_BRIGHTNESS_NORMAL); pixel.show();
-  Wire.begin(); 
-  if(display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR)) { 
-    u8g2.begin(display); 
-    updateLocalDisplay(); 
+
+  // Initialiser l'écran OLED
+  pixel.begin();
+  pixel.setBrightness(LED_BRIGHTNESS_NORMAL);
+  Wire.begin();
+  bool oledOK = display.begin(SSD1306_SWITCHCAPVCC, OLED_ADDR);
+  if (oledOK) {
+    u8g2.begin(display);
     Serial.println("[SLAVE] Ecran OLED initialisé");
   } else {
     Serial.println("[SLAVE] ERREUR: Ecran OLED non detecté!");
   }
-  
-  Serial.printf("[SLAVE] CPU: %d MHz, Mode éco après %d min\n", 
-    getCpuFrequencyMhz(), ECO_MODE_DELAY_MS / 60000);
 
-  xTaskCreatePinnedToCore(taskMesh, "Mesh", 10000, NULL, 1, NULL, 1);
-  delay(500);
-  xTaskCreatePinnedToCore(taskUI, "UI", 6000, NULL, 1, NULL, 0);
+  // ═══════════════════════════════════════════════════════════════════════
+  // VÉRIFICATION RESET : Si bouton maintenu 5 secondes au démarrage
+  // ═══════════════════════════════════════════════════════════════════════
+  bool buttonPressed = (digitalRead(BTN_PIN) == LOW);
+  if (buttonPressed) {
+    Serial.println("[CONFIG] Bouton détecté au démarrage...");
+
+    // Afficher message de reset sur l'écran
+    if (oledOK) {
+      display.clearDisplay();
+      u8g2.setForegroundColor(SSD1306_WHITE);
+      u8g2.setFont(u8g2_font_helvB08_tf);
+      u8g2.drawUTF8(10, 15, "RESET CONFIG?");
+      u8g2.setFont(u8g2_font_5x7_tf);
+      u8g2.drawUTF8(10, 28, "Maintenir 5 sec...");
+      display.display();
+    }
+
+    // Clignoter LED en orange pendant le comptage
+    unsigned long startTime = millis();
+    bool stillPressed = true;
+    int countdown = 5;
+
+    while (stillPressed && (millis() - startTime < RESET_HOLD_TIME_MS)) {
+      stillPressed = (digitalRead(BTN_PIN) == LOW);
+
+      // Clignotement orange
+      if ((millis() / 200) % 2) {
+        pixel.setPixelColor(0, COLOR_AWAY);
+      } else {
+        pixel.setPixelColor(0, 0);
+      }
+      pixel.show();
+
+      // Mise à jour du countdown sur l'écran
+      int newCountdown = 5 - ((millis() - startTime) / 1000);
+      if (newCountdown != countdown && oledOK) {
+        countdown = newCountdown;
+        display.clearDisplay();
+        u8g2.setFont(u8g2_font_helvB08_tf);
+        u8g2.drawUTF8(10, 15, "RESET CONFIG?");
+        u8g2.setFont(u8g2_font_5x7_tf);
+        char buf[20];
+        snprintf(buf, sizeof(buf), "Maintenir %d sec...", countdown);
+        u8g2.drawUTF8(10, 28, buf);
+        display.display();
+      }
+
+      delay(50);
+    }
+
+    if (stillPressed) {
+      // Bouton maintenu pendant 5 secondes -> RESET CONFIG
+      Serial.println("[CONFIG] *** RESET CONFIGURATION ***");
+      effacerConfig();
+
+      // Confirmation visuelle
+      if (oledOK) {
+        display.clearDisplay();
+        u8g2.setFont(u8g2_font_helvB08_tf);
+        u8g2.drawUTF8(20, 20, "CONFIG RESET!");
+        display.display();
+      }
+      pixel.setPixelColor(0, pixel.Color(255, 0, 255)); // Magenta
+      pixel.show();
+      delay(1500);
+
+      isConfigured = false;
+      configModeActive = true;
+    } else {
+      Serial.println("[CONFIG] Bouton relâché, boot normal");
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // CHARGER LA CONFIGURATION
+  // ═══════════════════════════════════════════════════════════════════════
+  if (!configModeActive) {
+    isConfigured = chargerNom();
+    if (isConfigured) {
+      Serial.printf("[CONFIG] Configuration trouvée: %s %s\n",
+                    monPrenom.c_str(), monNom.c_str());
+    } else {
+      Serial.println(
+          "[CONFIG] Aucune configuration valide - Mode configuration activé");
+      configModeActive = true;
+    }
+  }
+
+  // Initialiser le tracker de changement d'état
+  lastStateChange = millis();
+  pixel.show();
+
+  if (oledOK) {
+    updateLocalDisplay();
+  }
+
+  Serial.printf("[SLAVE] CPU: %d MHz, Mode éco après %d min\n",
+                getCpuFrequencyMhz(), ECO_MODE_DELAY_MS / 60000);
+
+  // ═══════════════════════════════════════════════════════════════════════
+  // DÉMARRAGE DES TÂCHES SELON LE MODE
+  // ═══════════════════════════════════════════════════════════════════════
+  if (configModeActive) {
+    // MODE CONFIGURATION : Seulement le panneau de config, pas de mesh
+    Serial.println("[CONFIG] *** MODE CONFIGURATION ACTIF ***");
+    Serial.println("[CONFIG] Mesh désactivé - Configurer via WiFi");
+    xTaskCreatePinnedToCore(taskConfigOnly, "Config", 6000, NULL, 1, NULL, 0);
+  } else {
+    // MODE NORMAL : Mesh + UI
+    Serial.println("[SLAVE] Mode normal - Démarrage Mesh");
+    xTaskCreatePinnedToCore(taskMesh, "Mesh", 10000, NULL, 1, NULL, 1);
+    delay(500);
+    xTaskCreatePinnedToCore(taskUI, "UI", 6000, NULL, 1, NULL, 0);
+  }
 }
 
 void loop() { vTaskDelay(1000); }
