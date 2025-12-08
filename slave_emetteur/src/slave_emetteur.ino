@@ -1,6 +1,6 @@
 /*
  * ═══════════════════════════════════════════════════════════════════════
- * ESP32 SLAVE ÉMETTEUR - DispoMesh v5.6 FINAL
+ * ESP32 SLAVE ÉMETTEUR - DispoMesh v5.7 FINAL - FIX INIT & CONFIG
  * ═══════════════════════════════════════════════════════════════════════
  * - BROWNOUT : DÉSACTIVÉ (Stabilité)
  * - WIFI : MASQUÉ (Variable HIDE_NETWORKS = 1)
@@ -173,44 +173,95 @@ void updateLEDs() {
 // SYSTÈME
 // ═══════════════════════════════════════════════════════════════════════
 void initSSID() {
+  // Utiliser ESP.getEfuseMac() pour obtenir une MAC stable AVANT l'init WiFi
+  uint64_t chipid = ESP.getEfuseMac();
   uint8_t mac[6];
-  WiFi.macAddress(mac);
+  mac[0] = (chipid >> 0) & 0xFF;
+  mac[1] = (chipid >> 8) & 0xFF;
+  mac[2] = (chipid >> 16) & 0xFF;
+  mac[3] = (chipid >> 24) & 0xFF;
+  mac[4] = (chipid >> 32) & 0xFF;
+  mac[5] = (chipid >> 40) & 0xFF;
+
   snprintf(apSSID, sizeof(apSSID), "Config_Poste_%02X%02X", mac[4], mac[5]);
+  Serial.printf("[INIT] MAC eFuse: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0],
+                mac[1], mac[2], mac[3], mac[4], mac[5]);
+  Serial.printf("[INIT] SSID généré: %s\n", apSSID);
 }
 
 void sauvegarderNom(String p, String n) {
+  // Validation: ne pas sauvegarder si le prénom ressemble à un SSID
+  if (p.startsWith("Config_Poste_") || p.length() == 0) {
+    Serial.println(
+        "[CONFIG] ERREUR: Tentative de sauvegarde d'un nom invalide!");
+    return;
+  }
+
+  Serial.printf("[CONFIG] Sauvegarde nom: '%s' '%s'\n", p.c_str(), n.c_str());
+
   File f = SPIFFS.open("/config.json", "w");
   if (f) {
     StaticJsonDocument<256> doc;
     doc["p"] = p;
     doc["n"] = n;
+    doc["configured"] = true; // Flag explicite de configuration
     serializeJson(doc, f);
     f.close();
+    Serial.println("[CONFIG] Configuration sauvegardée avec succès");
+
+    // Marquer comme configuré
+    isConfigured = true;
+  } else {
+    Serial.println("[CONFIG] ERREUR: Impossible d'ouvrir le fichier config!");
   }
   updateLocalDisplay();
 }
 
 bool chargerNom() {
+  Serial.println("[CONFIG] Chargement de la configuration...");
+
   if (SPIFFS.exists("/config.json")) {
     File f = SPIFFS.open("/config.json", "r");
     if (f) {
       StaticJsonDocument<256> doc;
-      if (deserializeJson(doc, f) == DeserializationError::Ok) {
+      DeserializationError err = deserializeJson(doc, f);
+
+      if (err == DeserializationError::Ok) {
         String p = doc["p"] | "";
         String n = doc["n"] | "";
+        bool configured = doc["configured"] | false;
+
+        Serial.printf("[CONFIG] Lu: prenom='%s', nom='%s', configured=%d\n",
+                      p.c_str(), n.c_str(), configured);
+
         // Vérifier que le prénom n'est pas vide ou égal à l'SSID par défaut
-        if (p.length() > 0 && !p.startsWith("Config_Poste_")) {
+        if (p.length() > 0 && !p.startsWith("Config_Poste_") &&
+            !p.startsWith("Nouveau")) {
           monPrenom = p;
           monNom = n;
           f.close();
+          Serial.printf("[CONFIG] Configuration valide chargée: %s %s\n",
+                        monPrenom.c_str(), monNom.c_str());
           return true; // Configuration valide trouvée
+        } else {
+          Serial.println("[CONFIG] Prénom invalide dans la config");
         }
+      } else {
+        Serial.printf("[CONFIG] Erreur JSON: %s\n", err.c_str());
       }
       f.close();
     }
+  } else {
+    Serial.println("[CONFIG] Fichier config.json non trouvé");
   }
-  monPrenom = String(apSSID);
-  monNom = "";
+
+  // PAS de configuration valide - garder les valeurs par défaut
+  // NE PAS affecter apSSID au prénom!
+  monPrenom = "Nouveau";
+  monNom = "Poste";
+  Serial.printf(
+      "[CONFIG] Pas de config valide, utilisation par défaut: %s %s\n",
+      monPrenom.c_str(), monNom.c_str());
   return false; // Pas de configuration valide
 }
 
@@ -220,9 +271,12 @@ void effacerConfig() {
     SPIFFS.remove("/config.json");
     Serial.println("[CONFIG] Configuration effacée");
   }
-  monPrenom = String(apSSID);
-  monNom = "";
+  // NE PAS affecter apSSID au prénom!
+  monPrenom = "Nouveau";
+  monNom = "Poste";
   isConfigured = false;
+  Serial.printf("[CONFIG] Réinitialisé à: %s %s\n", monPrenom.c_str(),
+                monNom.c_str());
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -328,11 +382,24 @@ void setupWebServer() {
   server.on("/", []() { server.send_P(200, "text/html", HTML_PAGE); });
   server.on("/api/get", []() {
     StaticJsonDocument<256> d;
-    d["prenom"] = monPrenom;
-    d["nom"] = monNom;
+
+    // Ne pas pré-remplir avec des valeurs par défaut non valides
+    String displayPrenom = monPrenom;
+    String displayNom = monNom;
+
+    // Si c'est un nom par défaut, laisser vide pour que l'utilisateur saisisse
+    if (displayPrenom.startsWith("Config_Poste_") ||
+        displayPrenom == "Nouveau" || displayPrenom.length() == 0) {
+      displayPrenom = "";
+      displayNom = "";
+    }
+
+    d["prenom"] = displayPrenom;
+    d["nom"] = displayNom;
     d["ssid"] = String(apSSID);
     d["meshConnected"] = !mesh.getNodeList().empty();
     d["slotId"] = slotId;
+    d["isConfigured"] = isConfigured;
     String s;
     serializeJson(d, s);
     server.send(200, "application/json", s);
@@ -342,17 +409,38 @@ void setupWebServer() {
     String n = server.arg("nom");
     p.trim();
     n.trim();
-    if (p.length() > 0) {
-      if (xSemaphoreTake(xMutex, 100)) {
-        monPrenom = p;
-        monNom = n;
-        configSauvegardee = true;
-        xSemaphoreGive(xMutex);
-      }
-      sauvegarderNom(p, n);
-      server.send(200);
-    } else
-      server.send(400);
+
+    Serial.printf("[API] Requête save: prenom='%s', nom='%s'\n", p.c_str(),
+                  n.c_str());
+
+    // Validation: ne pas accepter de prénom vide ou ressemblant à un SSID
+    if (p.length() == 0) {
+      Serial.println("[API] ERREUR: Prénom vide");
+      server.send(400, "text/plain", "Prénom requis");
+      return;
+    }
+    if (p.startsWith("Config_Poste_")) {
+      Serial.println("[API] ERREUR: Prénom invalide (ressemble à SSID)");
+      server.send(400, "text/plain", "Prénom invalide");
+      return;
+    }
+
+    // Sauvegarder d'abord dans le fichier
+    sauvegarderNom(p, n);
+
+    // Puis mettre à jour les variables globales avec mutex
+    if (xSemaphoreTake(xMutex, 100)) {
+      monPrenom = p;
+      monNom = n;
+      configSauvegardee = true;
+      xSemaphoreGive(xMutex);
+      Serial.printf("[API] Configuration mise à jour: %s %s\n", p.c_str(),
+                    n.c_str());
+      server.send(200, "text/plain", "OK");
+    } else {
+      Serial.println("[API] ERREUR: Impossible de prendre le mutex");
+      server.send(500, "text/plain", "Erreur interne");
+    }
   });
 
   // Gestionnaire pour les pages non trouvées (Captive Portal)
@@ -619,13 +707,13 @@ void taskUI(void *p) {
 // ═══════════════════════════════════════════════════════════════════════
 void taskConfigOnly(void *p) {
   Serial.println("[CONFIG] Démarrage mode configuration seul");
-  
+
   // Démarrage AP Config uniquement (pas de mesh)
   WiFi.mode(WIFI_AP);
   WiFi.softAP(apSSID, "config2025", 6, 0); // Visible pour faciliter la config
   Serial.printf("[CONFIG] AP démarré: %s\n", apSSID);
   Serial.printf("[CONFIG] IP: %s\n", WiFi.softAPIP().toString().c_str());
-  
+
   // Afficher écran mode configuration
   display.clearDisplay();
   u8g2.setForegroundColor(SSD1306_WHITE);
@@ -635,18 +723,18 @@ void taskConfigOnly(void *p) {
   u8g2.drawUTF8(5, 24, "WiFi:");
   u8g2.drawUTF8(35, 24, apSSID);
   display.display();
-  
+
   // LED bleu clair clignotant pour indiquer mode config
   dnsServer.start(53, "*", WiFi.softAPIP());
   setupWebServer();
-  
+
   unsigned long lastBlink = 0;
   bool ledOn = false;
-  
+
   while (1) {
     dnsServer.processNextRequest();
     server.handleClient();
-    
+
     // Clignotement LED bleu pour mode config
     if (millis() - lastBlink > 500) {
       ledOn = !ledOn;
@@ -658,15 +746,15 @@ void taskConfigOnly(void *p) {
       pixel.show();
       lastBlink = millis();
     }
-    
+
     // Vérifier si une configuration a été sauvegardée
     if (xSemaphoreTake(xMutex, 5)) {
       if (configSauvegardee) {
         configSauvegardee = false;
         xSemaphoreGive(xMutex);
-        
+
         Serial.println("[CONFIG] Configuration reçue - Redémarrage...");
-        
+
         // Afficher message de redémarrage
         display.clearDisplay();
         u8g2.setFont(u8g2_font_helvB08_tf);
@@ -674,17 +762,17 @@ void taskConfigOnly(void *p) {
         u8g2.setFont(u8g2_font_5x7_tf);
         u8g2.drawUTF8(10, 26, "Redemarrage...");
         display.display();
-        
+
         // LED vert fixe
         pixel.setPixelColor(0, COLOR_DISPO);
         pixel.show();
-        
+
         delay(2000);
         ESP.restart(); // Redémarrer pour appliquer la config
       }
       xSemaphoreGive(xMutex);
     }
-    
+
     delay(10);
   }
 }
