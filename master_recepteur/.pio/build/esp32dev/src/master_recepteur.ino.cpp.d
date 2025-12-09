@@ -130,39 +130,26 @@
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/spi_flash/include/esp_spi_flash.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/spi_flash/include/esp_spi_flash_counters.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_hw_support/include/soc/esp32/spiram.h \
+ .pio/libdeps/esp32dev/Adafruit\ GFX\ Library/Adafruit_GFX.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/Print.h \
+ .pio/libdeps/esp32dev/Adafruit\ GFX\ Library/gfxfont.h \
+ .pio/libdeps/esp32dev/Adafruit\ BusIO/Adafruit_I2CDevice.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/Wire/src/Wire.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/esp32-hal.h \
+ .pio/libdeps/esp32dev/Adafruit\ BusIO/Adafruit_SPIDevice.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/SPI/src/SPI.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/esp32-hal-spi.h \
+ .pio/libdeps/esp32dev/Adafruit\ NeoPixel/Adafruit_NeoPixel.h \
+ .pio/libdeps/esp32dev/Adafruit\ SSD1306/Adafruit_SSD1306.h \
  .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.h \
  .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson.hpp \
  .pio/libdeps/esp32dev/ArduinoJson/src/ArduinoJson/Configuration.hpp \
- .pio/libdeps/esp32dev/painlessMesh/src/painlessMesh.h \
- .pio/libdeps/esp32dev/painlessMesh/src/painlessTaskOptions.h \
- .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/configuration.hpp \
- .pio/libdeps/esp32dev/painlessMesh/src/painlessTaskOptions.h \
- .pio/libdeps/esp32dev/TaskScheduler/src/TaskSchedulerDeclarations.h \
- .pio/libdeps/esp32dev/AsyncTCP/src/AsyncTCP.h \
- .pio/libdeps/esp32dev/AsyncTCP/src/AsyncTCPVersion.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/IPv6Address.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip6_addr.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/opt.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/lwipopts.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/newlib/platform_include/sys/ioctl.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_system/include/esp_task.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/freertos/include/esp_additions/freertos/FreeRTOSConfig.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/netif/dhcp_state.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/sntp/sntp_get_set_time.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/debug.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/arch.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/cc.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/sys_arch.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/vfs_lwip.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/def.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip6_zone.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip_addr.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/def.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip4_addr.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/pbuf.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/err.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/SPIFFS/src/SPIFFS.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/FS/src/FS.h \
+ .pio/libdeps/esp32dev/U8g2_for_Adafruit_GFX/src/U8g2_for_Adafruit_GFX.h \
+ .pio/libdeps/esp32dev/U8g2_for_Adafruit_GFX/src/u8g2_fonts.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WiFi/src/WiFi.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/Print.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/IPv6Address.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WiFi/src/WiFiType.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_wifi/include/esp_wifi_types.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_wifi/include/esp_private/esp_wifi_types_private.h \
@@ -185,6 +172,24 @@
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_eth/include/esp_eth_phy.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/tcpip_adapter/include/tcpip_adapter.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/tcpip_adapter/include/tcpip_adapter_types.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip_addr.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/opt.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/lwipopts.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/newlib/platform_include/sys/ioctl.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_system/include/esp_task.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/freertos/include/esp_additions/freertos/FreeRTOSConfig.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/netif/dhcp_state.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/sntp/sntp_get_set_time.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/debug.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/arch.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/cc.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/sys_arch.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/port/esp32/include/arch/vfs_lwip.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/def.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip4_addr.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip6_addr.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/def.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/ip6_zone.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/include/apps/dhcpserver/dhcpserver.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_netif/include/esp_netif_sta_list.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_wifi/include/esp_smartconfig.h \
@@ -201,6 +206,16 @@
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WiFi/src/WiFiUdp.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/Udp.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/cbuf.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_system/include/esp_task_wdt.h \
+ .pio/libdeps/esp32dev/painlessMesh/src/painlessMesh.h \
+ .pio/libdeps/esp32dev/painlessMesh/src/painlessTaskOptions.h \
+ .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/configuration.hpp \
+ .pio/libdeps/esp32dev/painlessMesh/src/painlessTaskOptions.h \
+ .pio/libdeps/esp32dev/TaskScheduler/src/TaskSchedulerDeclarations.h \
+ .pio/libdeps/esp32dev/AsyncTCP/src/AsyncTCP.h \
+ .pio/libdeps/esp32dev/AsyncTCP/src/AsyncTCPVersion.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/pbuf.h \
+ /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/lwip/lwip/src/include/lwip/err.h \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessMeshSTA.h \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/mesh.hpp \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/configuration.hpp \
@@ -219,8 +234,6 @@
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/Update/src/Update.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/MD5Builder.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_rom/include/esp_rom_md5.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/SPIFFS/src/SPIFFS.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/FS/src/FS.h \
  .pio/libdeps/esp32dev/painlessMesh/src/arduino/wifi.hpp \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessMeshSTA.h \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/mesh.hpp \
@@ -233,22 +246,4 @@
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/protocol.hpp \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/router.hpp \
  .pio/libdeps/esp32dev/painlessMesh/src/painlessmesh/tcp.hpp \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/Wire/src/Wire.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/esp32-hal.h \
- .pio/libdeps/esp32dev/Adafruit\ GFX\ Library/Adafruit_GFX.h \
- .pio/libdeps/esp32dev/Adafruit\ GFX\ Library/gfxfont.h \
- .pio/libdeps/esp32dev/Adafruit\ BusIO/Adafruit_I2CDevice.h \
- .pio/libdeps/esp32dev/Adafruit\ BusIO/Adafruit_SPIDevice.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/SPI/src/SPI.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/cores/esp32/esp32-hal-spi.h \
- .pio/libdeps/esp32dev/Adafruit\ SSD1306/Adafruit_SSD1306.h \
- .pio/libdeps/esp32dev/U8g2_for_Adafruit_GFX/src/U8g2_for_Adafruit_GFX.h \
- .pio/libdeps/esp32dev/U8g2_for_Adafruit_GFX/src/u8g2_fonts.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WebServer/src/WebServer.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WebServer/src/HTTP_Method.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/nghttp/port/include/http_parser.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WebServer/src/Uri.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/libraries/WebServer/src/detail/RequestHandler.h \
- .pio/libdeps/esp32dev/Adafruit\ NeoPixel/Adafruit_NeoPixel.h \
- /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/esp_system/include/esp_task_wdt.h \
  /Users/flavio/.platformio/packages/framework-arduinoespressif32@3.20006.221224/tools/sdk/esp32/include/soc/esp32/include/soc/rtc_cntl_reg.h

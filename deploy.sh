@@ -66,14 +66,9 @@ select_option() {
     echo "${choices[$selected]}"
 }
 
-print_boot_instructions() {
-    echo "\n${RED}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo "${RED}║  ⚠️  MAINTIENS le bouton BOOT enfoncé, puis appuie sur RST    ║${NC}"
-    echo "${RED}║     Relâche RST, puis relâche BOOT après 1 seconde           ║${NC}"
-    echo "${RED}╚══════════════════════════════════════════════════════════════╝${NC}"
-    echo "${YELLOW}Appuie sur Entrée quand l'ESP32 est en mode BOOT...${NC}"
-    read -r
-}
+# Force auto-reset for ESP32
+export ESPTOOL_BEFORE=default_reset
+export ESPTOOL_AFTER=hard_reset
 
 run_pio_command() {
     local message="$1"
@@ -82,10 +77,11 @@ run_pio_command() {
     "$@"
     local rc=$?
     if [ $rc -ne 0 ]; then
-        echo "\n${RED}⛔ La commande a échoué. Réessaye avec un boot manuel...${NC}"
-        print_boot_instructions
-        "$@"
-        rc=$?
+        echo "\n${RED}⛔ La commande a échoué.${NC}"
+        # On ne demande plus le boot manuel, on laisse l'erreur remonter
+        # print_boot_instructions
+        # "$@"
+        # rc=$?
     fi
     return $rc
 }
@@ -120,20 +116,21 @@ master_port=$(select_option "Utilisez les flèches ↑/↓ et Entrée :" "${menu
 if [[ "$master_port" != "Skip" && "$master_port" != "Aucun port détecté" ]]; then
     echo "\n${YELLOW}[MASTER] Sélectionné : $master_port${NC}"
     
-    echo "\n${BLUE}ℹ️  Le Master nécessite 2 étapes : Système de fichiers (Site Web) + Firmware${NC}"
+    echo "\n${BLUE}ℹ️  Le Master nécessite 1 étape : Firmware (Code)${NC}"
     
-    if run_pio_command "${YELLOW}[MASTER] Étape 1/2 : Upload du système de fichiers (SPIFFS)...${NC}" \
-        pio run -d "$MASTER_DIR" -e esp32dev -t uploadfs --upload-port "$master_port"; then
+    # if run_pio_command "${YELLOW}[MASTER] Étape 1/2 : Upload du système de fichiers (SPIFFS)...${NC}" \
+    #     pio run -d "$MASTER_DIR" -e esp32dev -t uploadfs --upload-port "$master_port"; then
 
-        if run_pio_command "\n${YELLOW}[MASTER] Étape 2/2 : Upload du Firmware (Code)...${NC}" \
-            pio run -d "$MASTER_DIR" -e esp32dev -t upload --upload-port "$master_port"; then
-            echo "\n${GREEN}✅ MASTER déployé avec succès !${NC}"
-        else
-            echo "\n${RED}❌ Erreur lors de l'upload du Firmware Master.${NC}"
-        fi
+    if run_pio_command "\n${YELLOW}[MASTER] Upload du Firmware (Code)...${NC}" \
+        pio run -d "$MASTER_DIR" -e esp32dev -t upload --upload-port "$master_port"; then
+        echo "\n${GREEN}✅ MASTER déployé avec succès !${NC}"
     else
-        echo "\n${RED}❌ Erreur lors de l'upload SPIFFS. Vérifie que le moniteur série est fermé.${NC}"
+        echo "\n${RED}❌ Erreur lors de l'upload du Firmware Master.${NC}"
     fi
+
+    # else
+    #     echo "\n${RED}❌ Erreur lors de l'upload SPIFFS. Vérifie que le moniteur série est fermé.${NC}"
+    # fi
 else
     echo "⏭️  Master ignoré."
 fi
