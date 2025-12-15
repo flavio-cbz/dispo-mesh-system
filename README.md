@@ -136,22 +136,33 @@ Si vous préférez l'IDE Arduino classique :
 3. Ouvrez `slave_emetteur/src/slave_emetteur.ino` pour les Slaves.
 4. Sélectionnez votre carte (ESP32 Dev Module) et le port, puis téléversez.
 
-### 📸 Galerie & Schémas
+### 📸 Galerie
 
-#### Schéma de Câblage Slave
+#### L'Émetteur (Slave)
 
-![Schéma Câblage Slave](path/to/schema_slave.png)
-*(Insérer ici le schéma de câblage du boîtier Slave)*
+![Emetteur Slave](Photos/Emmeteur_1.jpg)
+*Le boîtier Slave avec son bouton et son écran de statut.*
 
-#### Schéma de Câblage Master
+#### Le Récepteur (Master)
 
-![Schéma Câblage Master](path/to/schema_master.png)
-*(Insérer ici le schéma de câblage du Master avec le multiplexeur)*
+![Récepteur Master](Photos/Recepteur_Top.jpg)
+![Câblage Arrière](Photos/Recepteur_Dos.jpg)
+*Le Master et son câblage (Multiplexeur I2C visible à l'arrière).*
 
-#### Montage Fini
+#### Montage Complet
 
-![Photo du Montage](path/to/photo_montage.jpg)
-*(Insérer ici une photo du système en fonctionnement)*
+![Système Complet](Photos/Emmeteur_+_Recepteur_1.jpg)
+*Vue d'ensemble du système DispoMesh en fonctionnement.*
+
+### 🎥 Démos Vidéo
+
+#### Fonctionnement Général
+
+<video src="Photos/Demo_courte_recepteur.mp4" controls width="100%"></video>
+
+#### Démonstration du Reset
+
+<video src="Photos/Demo_Reset.mp4" controls width="100%"></video>
 
 4. **Profiter !**
     Les boîtiers se connectent entre eux automatiquement. Connectez-vous au WiFi `DispoMesh` (mot de passe: `meshpass2025`) pour accéder au dashboard.
