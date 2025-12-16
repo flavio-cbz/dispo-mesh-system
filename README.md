@@ -136,6 +136,20 @@ Si vous préférez l'IDE Arduino classique :
 3. Ouvrez `slave_emetteur/src/slave_emetteur.ino` pour les Slaves.
 4. Sélectionnez votre carte (ESP32 Dev Module) et le port, puis téléversez.
 
+### 🖨️ Fichiers 3D à Imprimer
+
+Les fichiers STL pour l'impression 3D des boîtiers sont disponibles dans le dossier `Modélisations 3D/` :
+
+#### Émetteur (Slave)
+* **[Emetteur_Base.STL](Modélisations%203D/Emetteur/Emetteur_Base.STL)** : Socle du boîtier émetteur.
+* **[Emetteur_Boite.STL](Modélisations%203D/Emetteur/Emetteur_Boite.STL)** : Couvercle du boîtier émetteur.
+
+#### Récepteur (Master)
+* **[Recepteur_MAIN.STL](Modélisations%203D/Recepteur/Recepteur_MAIN.STL)** : Corps principal du récepteur.
+* **[Recepteur_Add.STL](Modélisations%203D/Recepteur/Recepteur_Add.STL)** : Pièce additionnelle pour le récepteur.
+
+> 💡 Les fichiers sources SolidWorks sont également disponibles dans `Modélisations 3D/Fichier Solidworks/`.
+
 ### 📸 Galerie
 
 #### L'Émetteur (Slave)
